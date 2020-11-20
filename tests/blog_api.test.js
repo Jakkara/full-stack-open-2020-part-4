@@ -84,4 +84,15 @@ describe('Blog creation', () => {
     // Check we can find the created blog
     expect(createdBlog.likes).toBe(0)
   })
+
+  test('Creating a blog without a URL fails', async () => {
+    const blogWithoutUrl = {
+      title: 'This one has no URL',
+      author: 'An offline author',
+    }
+    await api
+      .post('/api/blogs')
+      .send(blogWithoutUrl)
+      .expect(400)
+  })
 })
