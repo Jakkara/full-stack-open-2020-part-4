@@ -45,3 +45,27 @@ describe('Blog fetching', () => {
   })
 })
 
+describe('Blog creation', () => {
+  const testBlog = {
+    title: 'Created For Test',
+    author: 'Testwriter',
+    url: 'https://utu.fi',
+    likes: 333
+  }
+
+  test('Can create blog', async () => {
+    const countBefore = await (await api.get('/api/blogs')).body.length
+    await api
+      .post('/api/blogs')
+      .send(testBlog)
+      .expect(201)
+
+    const resultsAfter = await (await api.get('/api/blogs'))
+    const countAfter = resultsAfter.body.length
+    expect(countAfter).toBe(countBefore + 1)
+
+    // Check we can find the created blog
+    expect(resultsAfter.body.find(item => item.title === testBlog.title)).toBeDefined()
+  })
+
+})
