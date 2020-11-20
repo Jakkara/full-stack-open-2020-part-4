@@ -68,4 +68,20 @@ describe('Blog creation', () => {
     expect(resultsAfter.body.find(item => item.title === testBlog.title)).toBeDefined()
   })
 
+  test('Creating a blog without likes field has 0 likes', async () => {
+    const blogWithoutLikes = {
+      title: 'This one has no likes',
+      author: 'A sad author',
+      url: 'https://utu.fi'
+    }
+    await api
+      .post('/api/blogs')
+      .send(blogWithoutLikes)
+      .expect(201)
+
+    const results = await (await api.get('/api/blogs'))
+    const createdBlog = results.body.find(item => item.title === blogWithoutLikes.title)
+    // Check we can find the created blog
+    expect(createdBlog.likes).toBe(0)
+  })
 })
