@@ -38,5 +38,10 @@ describe('Blog fetching', () => {
     const result = await api.get('/api/blogs')
     expect(result.body).toHaveLength(6)
   })
+
+  test('Blog ID does not have an underscore', async () => {
+    const result = await api.get('/api/blogs')
+    expect(result.body[0].id).toBeDefined()
+  })
 })
 
