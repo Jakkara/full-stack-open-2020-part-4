@@ -1,23 +1,38 @@
 const blogRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
-blogRouter.get('/api/blogs', async (request, response) => {
-  const result = await Blog.find({})
+blogRouter.get('/', async (request, response) => {
+  const result = await Blog.find({}).populate('user', { username: 1, name: 1 })
   response.json(result)
 })
 
-blogRouter.post('/api/blogs', async (request, response) => {
-  const blogData = request.body
-  if ('url' in blogData && 'title' in blogData) {
-    const blog = new Blog(blogData)
+blogRouter.post('/', async (request, response) => {
+  const body = request.body
+  const user = await User.findById(body.userId)
+
+  if ('url' in body && 'title' in body) {
+    const { title, author, url, likes } = body
+
+    const blog = new Blog({
+      title,
+      author,
+      url,
+      likes,
+      user: user._id
+    })
     const result = await blog.save()
+
+    user.blogs = user.blogs.concat(result._id)
+    await user.save()
+
     response.status(201).json(result)
   } else {
     response.status(400).end()
   }
 })
 
-blogRouter.delete('/api/blogs/:id', async (request, response, next) => {
+blogRouter.delete('/:id', async (request, response, next) => {
   try {
     await Blog.findByIdAndDelete(request.params.id)
     response.status(204).end()
@@ -26,10 +41,10 @@ blogRouter.delete('/api/blogs/:id', async (request, response, next) => {
   }
 })
 
-blogRouter.put('/api/blogs/:id', async (request, response) => {
-  const blogData = request.body
-  if ('url' in blogData && 'title' in blogData) {
-    const result = await Blog.findByIdAndUpdate(request.params.id, blogData, { new: true })
+blogRouter.put('/:id', async (request, response) => {
+  const body = request.body
+  if ('url' in body && 'title' in body) {
+    const result = await Blog.findByIdAndUpdate(request.params.id, body, { new: true })
     response.status(201).json(result)
   } else {
     response.status(400).end()
