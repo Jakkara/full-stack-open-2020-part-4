@@ -2,8 +2,21 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 const api = supertest(app)
+
+const testUser = {
+  'username': 'testuser',
+  'password': '123',
+  'name': 'Test User'
+}
+const credentials = {
+  'username': 'testuser',
+  'password': '123'
+}
+
+let token = ''
 
 const initialBlogs = [
   { title: 'React patterns', author: 'Michael Chan', url: 'https://reactpatterns.com/', likes: 7, __v: 0 },
@@ -13,6 +26,20 @@ const initialBlogs = [
   { title: 'TDD harms architecture', author: 'Robert C. Martin', url: 'http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html', likes: 0 },
   { title: 'Type wars', author: 'Robert C. Martin', url: 'http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html', likes: 2 }
 ]
+
+beforeAll(async () => {
+  await User.deleteMany({})
+  await api
+    .post('/api/users')
+    .send(testUser)
+
+  const loginResult = await api
+    .post('/api/login')
+    .send(credentials)
+
+  token = loginResult.body.token
+})
+
 beforeEach(async () => {
   await Blog.deleteMany({})
   const blogs = []
@@ -57,6 +84,7 @@ describe('Blog creation', () => {
     const countBefore = await (await api.get('/api/blogs')).body.length
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(testBlog)
       .expect(201)
 
@@ -76,6 +104,7 @@ describe('Blog creation', () => {
     }
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(blogWithoutLikes)
       .expect(201)
 
@@ -92,6 +121,7 @@ describe('Blog creation', () => {
     }
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(blogWithoutUrl)
       .expect(400)
   })
